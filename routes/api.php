@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\NotificationController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
@@ -23,6 +24,9 @@ Route::prefix('auth')->group(function () {
         Route::get('/categories', [CategoryController::class, 'index']);
     });
 });
+
+// ROUTE NOTIFIKASI (di luar prefix 'auth' sehingga URL menjadi /api/notifications)
+Route::middleware('auth:sanctum')->get('/notifications', [NotificationController::class, 'index']);
 
 // ROUTE DASHBOARD (Sudah di luar grup prefix 'auth' sehingga URL menjadi /api/dashboard/summary)
 Route::middleware('auth:sanctum')->get('/dashboard/summary', [DashboardController::class, 'summary']);
