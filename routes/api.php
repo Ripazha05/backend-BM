@@ -13,6 +13,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/user/profile', [AuthController::class, 'updateProfile']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/user', [AuthController::class, 'user']);
         Route::get('/orders', [OrderController::class, 'index']);
