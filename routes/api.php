@@ -4,7 +4,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
-use Illuminate\Http\Request; // Pastikan line ini ada
+use App\Http\Controllers\DashboardController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -22,7 +23,11 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+// ROUTE DASHBOARD (Sudah di luar grup prefix 'auth' sehingga URL menjadi /api/dashboard/summary)
+Route::middleware('auth:sanctum')->get('/dashboard/summary', [DashboardController::class, 'summary']);
+
 // Taruh di luar grup auth agar bisa diakses langsung ke /api/products
 Route::get('/products', [ProductController::class, 'index']);
 Route::post('/products', [ProductController::class, 'store']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+Route::put('/products/{id}', [ProductController::class, 'update']);
