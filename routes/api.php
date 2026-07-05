@@ -5,6 +5,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\API\OwnerApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -32,3 +33,9 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::post('/products', [ProductController::class, 'store']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
+
+Route::prefix('owner')->group(function () {
+    Route::get('/dashboard', [OwnerApiController::class, 'getDashboardData']);
+    Route::get('/stock', [OwnerApiController::class, 'getStockData']);
+    Route::get('/finance', [OwnerApiController::class, 'getFinancialData']);
+});
