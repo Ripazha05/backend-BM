@@ -7,44 +7,38 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    // Fungsi menampilkan semua produk
+    // Fungsi menampilkan semua produk beserta kategorinya
     public function index()
     {
-        return response()->json(Product::all(), 200);
+        // Menggunakan with() agar tabel relasi kategori ikut dikirim ke React
+        $products = Product::with('category')->get();
+        return response()->json($products, 200);
     }
 
     // Fungsi menyimpan produk baru
     public function store(Request $request)
     {
         try {
-            // Ambil data yang dikirim dari React dengan fallback (nilai cadangan jika nama variable beda)
-            $productName = $request->input('product_name') ?? $request->input('namaProduk');
-            $categoryId  = $request->input('category_id') ?? $request->input('kategori');
-            $price       = $request->input('price') ?? $request->input('harga');
-            $stock       = $request->input('stock') ?? $request->input('stok');
-            $description = $request->input('description') ?? $request->input('deskripsi') ?? '-';
-
-            // Paksa simpan data langsung menggunakan Query Builder untuk melewati proteksi $fillable sementara waktu
-            $id = \DB::table('products')->insertGetId([
-                'product_name' => $productName,
-                'category_id'  => $categoryId,
-                'price'        => $price,
-                'stock'        => $stock,
-                'description'  => $description,
-                'image'        => 'default.png', // Memberikan nilai default secara paksa agar database menerima
-                'created_at'   => now(),
-                'updated_at'   => now(),
+            // 1. Validasi data dari React
+            $validatedData = $request->validate([
+                'product_name' => 'required|string|max:255',
+                'category_id'  => 'required|integer|exists:categories,id_categories',
+                'price'        => 'required|integer',
+                'stock'        => 'required|integer',
+                'description'  => 'nullable|string',
             ]);
 
-            // Ambil data yang baru saja dimasukkan
-            $product = \DB::table('products')->where('id_product', $id)->first();
+            // 2. Beri nilai default untuk image jika tidak ada
+            $validatedData['image'] = $request->input('image', 'default.png');
+
+            // 3. Simpan menggunakan Eloquent (Otomatis dilindungi $fillable)
+            $product = Product::create($validatedData);
 
             return response()->json($product, 201);
 
         } catch (\Exception $e) {
-            // Jika ada masalah lain, return pesan error agar bisa dibaca langsung di React Console Log
             return response()->json([
-                'message' => 'Terjadi kesalahan pada server',
+                'message' => 'Terjadi kesalahan pada server saat menyimpan data',
                 'error'   => $e->getMessage()
             ], 500);
         }
@@ -54,35 +48,27 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $product = \DB::table('products')->where('id_product', $id)->first();
+            // Cari produk berdasarkan id_product, akan otomatis error 404 jika tidak ada
+            $product = Product::findOrFail($id);
 
-            if (!$product) {
-                return response()->json(['message' => 'Produk tidak ditemukan'], 404);
-            }
-
-            // Ambil data yang dikirim dari React dengan fallback (sama seperti store())
-            $productName = $request->input('product_name') ?? $request->input('namaProduk');
-            $categoryId  = $request->input('category_id') ?? $request->input('kategori');
-            $price       = $request->input('price') ?? $request->input('harga');
-            $stock       = $request->input('stock') ?? $request->input('stok');
-            $description = $request->input('description') ?? $request->input('deskripsi') ?? '-';
-
-            \DB::table('products')->where('id_product', $id)->update([
-                'product_name' => $productName,
-                'category_id'  => $categoryId,
-                'price'        => $price,
-                'stock'        => $stock,
-                'description'  => $description,
-                'updated_at'   => now(),
+            // Validasi data
+            $validatedData = $request->validate([
+                'product_name' => 'sometimes|required|string|max:255',
+                'category_id'  => 'sometimes|required|integer|exists:categories,id_categories',
+                'price'        => 'sometimes|required|integer',
+                'stock'        => 'sometimes|required|integer',
+                'description'  => 'nullable|string',
+                'image'        => 'nullable|string'
             ]);
 
-            $updated = \DB::table('products')->where('id_product', $id)->first();
+            // Update menggunakan Eloquent
+            $product->update($validatedData);
 
-            return response()->json($updated, 200);
+            return response()->json($product, 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Terjadi kesalahan pada server',
+                'message' => 'Terjadi kesalahan pada server saat memperbarui data',
                 'error'   => $e->getMessage()
             ], 500);
         }
@@ -91,11 +77,16 @@ class ProductController extends Controller
     // Fungsi menghapus produk
     public function destroy($id)
     {
-        $product = Product::find($id);
-        if ($product) {
+        try {
+            $product = Product::findOrFail($id);
             $product->delete();
+
             return response()->json(['message' => 'Produk berhasil dihapus'], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Produk tidak ditemukan atau gagal dihapus',
+                'error'   => $e->getMessage()
+            ], 404);
         }
-        return response()->json(['message' => 'Produk tidak ditemukan'], 404);
     }
 }

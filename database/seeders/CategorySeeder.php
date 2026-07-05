@@ -10,13 +10,23 @@ class CategorySeeder extends Seeder
     public function run()
     {
         Category::create([
-            'category_name' => 'Elektronik',
-            'description' => 'Gadget, Laptop, dan alat elektronik lainnya',
+            'category_name' => 'Sofa',
+            'description' => 'Berbagai macam sofa yang nyaman untuk ruang tamu dan keluarga',
         ]);
 
         Category::create([
-            'category_name' => 'Pakaian',
-            'description' => 'Baju, Celana, Jaket pria dan wanita',
+            'category_name' => 'Meja Kerja',
+            'description' => 'Meja kerja ergonomis dan estetik untuk produktivitas',
+        ]);
+
+        Category::create([
+            'category_name' => 'Tempat Tidur',
+            'description' => 'Ranjang dan tempat tidur yang nyaman untuk istirahat maksimal',
+        ]);
+
+        Category::create([
+            'category_name' => 'Kursi',
+            'description' => 'Kursi makan, kursi santai, dan kursi tamu',
         ]);
     }
 }
