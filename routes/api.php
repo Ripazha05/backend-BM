@@ -38,6 +38,9 @@ Route::post('/products', [ProductController::class, 'store']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
 
+// Route notifikasi — diakses langsung ke /api/notifications
+Route::get('/notifications', [NotificationController::class, 'index']);
+
 Route::prefix('owner')->group(function () {
     Route::get('/dashboard', [OwnerApiController::class, 'getDashboardData']);
     Route::get('/stock', [OwnerApiController::class, 'getStockData']);

@@ -8,72 +8,51 @@ use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    // Batas minimum stok dianggap "menipis"
-    const LOW_STOCK_THRESHOLD = 5;
-
     public function index()
     {
-        $notifications = collect();
+        $notifications = [];
 
-        // 1. STOK MENIPIS
-        $lowStockProducts = Product::where('stock', '<=', self::LOW_STOCK_THRESHOLD)
-            ->orderBy('stock', 'asc')
-            ->get();
+        // 1. Notifikasi stok menipis / habis
+        $lowStockProducts = Product::where('stock', '<=', 5)->get();
 
         foreach ($lowStockProducts as $product) {
-            $notifications->push([
+            $isEmpty = $product->stock <= 0;
+            $notifications[] = [
                 'id'          => 'stock-' . $product->id_product,
                 'type'        => 'low_stock',
-                'title'       => 'Stok hampir habis',
-                'description' => "{$product->product_name} tersisa {$product->stock} unit",
+                'title'       => $isEmpty ? 'Stok Habis' : 'Stok Menipis',
+                'description' => $isEmpty
+                    ? "{$product->product_name} kehabisan stok."
+                    : "{$product->product_name} tersisa {$product->stock} unit.",
                 'time'        => $product->updated_at,
-                'is_read'     => false,
-            ]);
+            ];
         }
 
-        // 2. PESANAN BARU MASUK (status Pending)
-        $newOrders = Order::with('user')
-            ->where('status', 'Pending')
-            ->orderBy('order_date', 'desc')
-            ->limit(10)
-            ->get();
+        // 2. Notifikasi pesanan baru (5 pesanan terakhir dengan status pending/baru)
+        if (class_exists(Order::class)) {
+            $recentOrders = Order::where('status', 'pending')
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
 
-        foreach ($newOrders as $order) {
-            $customerName = $order->user->name ?? 'Customer';
-            $notifications->push([
-                'id'          => 'order-new-' . $order->id_order,
-                'type'        => 'new_order',
-                'title'       => 'Pesanan baru masuk',
-                'description' => "Order #{$order->id_order} dari {$customerName}",
-                'time'        => $order->order_date,
-                'is_read'     => false,
-            ]);
+            foreach ($recentOrders as $order) {
+                $notifications[] = [
+                    'id'          => 'order-' . $order->id,
+                    'type'        => 'new_order',
+                    'title'       => 'Pesanan Baru',
+                    'description' => "Pesanan #{$order->id} baru saja masuk.",
+                    'time'        => $order->created_at,
+                ];
+            }
         }
 
-        // 3. PESANAN SELESAI / DIKIRIM TERBARU
-        $completedOrders = Order::with('user')
-            ->where('status', 'Selesai')
-            ->orderBy('order_date', 'desc')
-            ->limit(5)
-            ->get();
-
-        foreach ($completedOrders as $order) {
-            $notifications->push([
-                'id'          => 'order-done-' . $order->id_order,
-                'type'        => 'order_done',
-                'title'       => 'Pengiriman dikonfirmasi',
-                'description' => "Order #{$order->id_order} berhasil dikirim",
-                'time'        => $order->order_date,
-                'is_read'     => false,
-            ]);
-        }
-
-        // Urutkan semua notifikasi dari yang terbaru
-        $sorted = $notifications->sortByDesc('time')->values();
+        // Urutkan berdasarkan waktu terbaru
+        usort($notifications, function ($a, $b) {
+            return strtotime($b['time']) - strtotime($a['time']);
+        });
 
         return response()->json([
-            'total_unread'  => $sorted->count(),
-            'notifications' => $sorted,
-        ]);
+            'notifications' => $notifications,
+        ], 200);
     }
 }
