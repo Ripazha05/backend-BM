@@ -46,3 +46,4 @@ Route::prefix('owner')->group(function () {
     Route::get('/stock', [OwnerApiController::class, 'getStockData']);
     Route::get('/finance', [OwnerApiController::class, 'getFinancialData']);
 });
+
