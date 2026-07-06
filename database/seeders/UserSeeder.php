@@ -27,5 +27,14 @@ class UserSeeder extends Seeder
             'address' => 'Jl. Merdeka No. 45, Bandung',
             'role' => 'customer',
         ]);
+
+        User::create([
+            'name' => 'Ripa Geming',
+            'email' => 'ripantat@gmail.com',
+            'password' => Hash::make('password123'),
+            'phone' => '089053572180',
+            'address' => 'Jl. Duri No. 67, Rumbai',
+            'role' => 'owner',
+        ]);
     }
 }
