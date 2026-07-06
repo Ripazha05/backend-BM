@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\API\OwnerApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\NotificationController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
@@ -33,6 +34,9 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::post('/products', [ProductController::class, 'store']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
+
+// Route notifikasi — diakses langsung ke /api/notifications
+Route::get('/notifications', [NotificationController::class, 'index']);
 
 Route::prefix('owner')->group(function () {
     Route::get('/dashboard', [OwnerApiController::class, 'getDashboardData']);
